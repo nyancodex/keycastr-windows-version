@@ -9,6 +9,40 @@
 > If you want the real, supported app for macOS, go to the original project:
 > **https://github.com/keycastr/keycastr**
 
+## Download & use (Windows)
+
+1. **Download the installer.** Grab `KeyCastr_<version>_x64-setup.exe` from the
+   [latest release](https://github.com/nyancodex/keycastr-windows-version/releases/latest).
+   (A portable `keycastr.exe` is also attached if you'd rather not install.)
+2. **Run it.** The build is unsigned, so Windows SmartScreen may warn the first
+   time — click **More info ▸ Run anyway**. The installer adds KeyCastr to your
+   apps and launches it.
+3. **It lives in the system tray.** There is no main window. Click the tray icon
+   for the menu: **Start / Stop Casting**, **Preferences…**, and **Quit**.
+4. **Cast your keystrokes.** By default it starts casting as soon as it launches,
+   so your keystrokes appear on screen right away. Toggle casting any time from
+   the tray menu or with the hotkey (default **Ctrl+Alt+Shift+K**).
+
+### Using it
+
+- **Two visualizer styles** (choose in Preferences):
+  - *Default* — a bezel of recent keystrokes pinned to a screen corner.
+  - *Svelte* — a compact panel showing held modifiers plus the latest keys.
+- **What gets shown** (Default style): command-key combos only, all modified
+  keys, or every keystroke.
+- **Mouse clicks** — optionally draw a circle at each click.
+- **Customize in Preferences:** overlay corner, font size, bezel/text colors,
+  fade timing, whether to show the literal typed character (e.g. `!` instead of
+  `Shift+1`), the toggle hotkey, and whether to start casting on launch.
+
+> Heads-up: like the macOS original, this is a keystroke visualizer — it
+> installs a global keyboard/mouse hook, so antivirus/SmartScreen may flag it.
+> It makes **no network calls** and stores only its settings and a local debug
+> log — never your keystrokes. Details in
+> [`windows/README.md`](windows/README.md) § "Privacy & security".
+
+Building from source instead? See [`windows/README.md`](windows/README.md).
+
 ## What's in this fork
 
 | Path        | What it is                                                                 |
