@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--
+  prefs.html — the Preferences window (KeyCastr's NSPreferences equivalent).
+  Opened from the tray ("Preferences…"); see main.rs `open_preferences`.
+
+  Every control maps to a field of the Rust `Settings` struct (camelCase JSON).
+  prefs.js loads the current settings, binds the form, and on change calls the
+  `set_settings` command — which persists them and live-pushes them to the
+  overlay. The casting button calls `toggle_casting`.
+
+  To add a preference: add the field to `Settings` in main.rs, add a control
+  here, and read/write it in prefs.js (`fillForm` / `collect`).
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KeyCastr Preferences</title>
+    <link rel="stylesheet" href="prefs.css" />
+  </head>
+  <body>
+    <header class="prefs-header">
+      <h1>KeyCastr</h1>
+      <button id="cast-toggle" class="cast-btn">Start Casting</button>
+    </header>
+
+    <section class="group">
+      <h2>Visualizer</h2>
+      <label class="row">
+        <span>Style</span>
+        <select id="visualizer">
+          <option value="Default">Default (bezel)</option>
+          <option value="Svelte">Svelte (compact)</option>
+        </select>
+      </label>
+      <label class="row" data-only="Default">
+        <span>Display</span>
+        <select id="displayMode">
+          <option value="command">Command keys only</option>
+          <option value="modified">All modified keys</option>
+          <option value="all">All keystrokes</option>
+        </select>
+      </label>
+      <label class="row check" data-only="Svelte">
+        <input type="checkbox" id="svelteDisplayAll" />
+        <span>Show all keys (not just modified)</span>
+      </label>
+      <label class="row check">
+        <input type="checkbox" id="displayModifiedCharacters" />
+        <span>Display modified characters (e.g. ! instead of Shift+1)</span>
+      </label>
+    </section>
+
+    <section class="group">
+      <h2>Appearance</h2>
+      <label class="row">
+        <span>Font size</span>
+        <input type="number" id="fontSize" min="8" max="96" step="1" />
+      </label>
+      <label class="row">
+        <span>Bezel color</span>
+        <span class="color-pair">
+          <input type="color" id="bezelColorHex" />
+          <input type="range" id="bezelColorA" min="0" max="1" step="0.05" />
+        </span>
+      </label>
+      <label class="row">
+        <span>Text color</span>
+        <span class="color-pair">
+          <input type="color" id="textColorHex" />
+          <input type="range" id="textColorA" min="0" max="1" step="0.05" />
+        </span>
+      </label>
+      <label class="row">
+        <span>Position</span>
+        <select id="position">
+          <option value="bottom-left">Bottom left</option>
+          <option value="bottom-right">Bottom right</option>
+          <option value="top-left">Top left</option>
+          <option value="top-right">Top right</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="group">
+      <h2>Timing (seconds)</h2>
+      <label class="row">
+        <span>Fade delay</span>
+        <input type="number" id="fadeDelay" min="0" max="20" step="0.1" />
+      </label>
+      <label class="row">
+        <span>Fade duration</span>
+        <input type="number" id="fadeDuration" min="0" max="5" step="0.05" />
+      </label>
+      <label class="row">
+        <span>Keystroke join window</span>
+        <input type="number" id="keystrokeDelay" min="0" max="5" step="0.05" />
+      </label>
+    </section>
+
+    <section class="group">
+      <h2>Mouse</h2>
+      <label class="row">
+        <span>Clicks</span>
+        <select id="mouseDisplay">
+          <option value="none">Don't show</option>
+          <option value="current">Show click circles</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="group">
+      <h2>Behavior</h2>
+      <label class="row check">
+        <input type="checkbox" id="startCastingAtLaunch" />
+        <span>Start casting when KeyCastr launches</span>
+      </label>
+      <label class="row">
+        <span>Toggle hotkey</span>
+        <input type="text" id="toggleHotkey" readonly placeholder="Click, then press keys" />
+      </label>
+    </section>
+
+    <footer class="prefs-footer">
+      <button id="close-btn">Close</button>
+    </footer>
+
+    <script src="prefs.js"></script>
+  </body>
+</html>

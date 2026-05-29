@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!--
+  overlay.html — the always-on-top, click-through window the visualizers draw
+  into. Created hidden at startup and shown while casting (see
+  src-tauri/src/main.rs `create_overlay` / `apply_casting`). It spans the whole
+  virtual desktop and never captures input (pointer-events:none + the OS-level
+  set_ignore_cursor_events).
+
+  Three stacked layers, only one keystroke visualizer visible at a time:
+    #default-visualizer  KeyCastr's KCDefaultVisualizer (corner bezel of rows)
+    #svelte-visualizer   KeyCastr's SvelteVisualizer (modifier slots + big keys)
+    #mouse-layer         click circles (KCMouseEventVisualizer)
+
+  Logic lives in overlay.js; formatting in transformer.js.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KeyCastr</title>
+    <link rel="stylesheet" href="overlay.css" />
+  </head>
+  <body>
+    <div id="default-visualizer" class="layer">
+      <div class="anchor" id="default-anchor"></div>
+    </div>
+
+    <div id="svelte-visualizer" class="layer hidden">
+      <div class="anchor">
+        <div class="svelte-panel">
+          <div class="svelte-mods">
+            <span class="svelte-mod" data-mod="shift">⇧</span>
+            <span class="svelte-mod" data-mod="ctrl">Ctrl</span>
+            <span class="svelte-mod" data-mod="alt">Alt</span>
+            <span class="svelte-mod" data-mod="win">Win</span>
+          </div>
+          <div class="svelte-keys" id="svelte-keys"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mouse-layer" class="layer"></div>
+
+    <script src="transformer.js"></script>
+    <script src="overlay.js"></script>
+  </body>
+</html>

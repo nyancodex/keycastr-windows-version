@@ -1,0 +1,138 @@
+/*
+ * overlay.css — appearance of the click-through visualizer overlay.
+ *
+ * Colors, font size, and corner position are driven at runtime from the user's
+ * preferences via CSS variables / a corner class that overlay.js sets (see
+ * `applySettings`). Static structure lives here. The whole document is
+ * pointer-events:none so it never intercepts clicks (the OS-level
+ * set_ignore_cursor_events in main.rs is the real guarantee; this is belt-and-
+ * suspenders and keeps text unselectable).
+ *
+ * To change the bezel/Svelte/mouse look, edit the rules below. To change which
+ * values are user-configurable, edit `applySettings` in overlay.js and the
+ * Preferences UI (prefs.html/prefs.js).
+ */
+
+:root {
+  --kc-font-size: 16px;
+  --kc-bezel: rgba(0, 0, 0, 0.8);
+  --kc-text: rgba(255, 255, 255, 1);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.layer {
+  position: fixed;
+  inset: 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* The anchor holds a visualizer's content and is pinned to the chosen corner.
+   Newest rows are appended last; for bottom corners that puts the newest at the
+   bottom, matching KeyCastr. Right corners right-align their rows. */
+.anchor {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.corner-bottom-left .anchor {
+  left: 24px;
+  bottom: 24px;
+  align-items: flex-start;
+}
+.corner-bottom-right .anchor {
+  right: 24px;
+  bottom: 24px;
+  align-items: flex-end;
+}
+.corner-top-left .anchor {
+  left: 24px;
+  top: 24px;
+  align-items: flex-start;
+}
+.corner-top-right .anchor {
+  right: 24px;
+  top: 24px;
+  align-items: flex-end;
+}
+
+/* --- Default visualizer: rounded bezel rows --- */
+.kc-line {
+  background: var(--kc-bezel);
+  color: var(--kc-text);
+  font-size: var(--kc-font-size);
+  line-height: 1.2;
+  padding: 0.25em 0.5em;
+  border-radius: 0.4em;
+  font-weight: 600;
+  white-space: pre;
+  max-width: 80vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 1;
+}
+
+/* --- Svelte visualizer: modifier slots + recent keys --- */
+.svelte-panel {
+  background: var(--kc-bezel);
+  color: var(--kc-text);
+  border-radius: 0.5em;
+  padding: 0.4em 0.6em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  min-width: 4em;
+}
+.svelte-mods {
+  display: flex;
+  gap: 0.4em;
+}
+.svelte-mod {
+  opacity: 0.25;
+  font-size: calc(var(--kc-font-size) * 0.9);
+  font-weight: 700;
+  transition: opacity 0.1s linear;
+}
+.svelte-mod.on {
+  opacity: 1;
+}
+.svelte-keys {
+  font-size: calc(var(--kc-font-size) * 1.6);
+  font-weight: 700;
+  min-height: 1.2em;
+  white-space: pre;
+}
+
+/* --- Mouse visualizer: click circle (radius 22, matching KeyCastr) --- */
+.kc-click {
+  position: fixed;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  background: rgba(255, 210, 0, 0.35);
+  border: 2px solid rgba(255, 210, 0, 0.9);
+  opacity: 1;
+  transition: opacity 0.2s linear, transform 0.2s ease-out;
+}
+.kc-click.fade {
+  opacity: 0;
+  transform: scale(1.6);
+}

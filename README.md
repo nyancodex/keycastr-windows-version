@@ -1,87 +1,73 @@
-# KeyCastr
+# KeyCastr — personal Windows port (unofficial fork)
 
-KeyCastr, an open source keystroke visualizer.
+> **This is a personal, unofficial fork** of [KeyCastr](https://github.com/keycastr/keycastr),
+> the open-source keystroke visualizer. It exists to host a **from-scratch
+> Windows port** of the app that I built for my **own personal use**. It is
+> **not** an official release, and it is **not affiliated with or endorsed by**
+> the original KeyCastr authors or the `keycastr` organization.
+>
+> If you want the real, supported app for macOS, go to the original project:
+> **https://github.com/keycastr/keycastr**
 
-![header image](assets/KeyCastr_header.png)
+## What's in this fork
 
-KeyCastr enables you to share your keystrokes when creating screencasts, presenting, or collaborating with others. You can choose to display command keys, all modified keys, or all keystrokes, and there is also an option to include mouse clicks.
+| Path        | What it is                                                                 |
+| ----------- | -------------------------------------------------------------------------- |
+| `keycastr/` | The **original** macOS KeyCastr source (Objective-C / Cocoa), unmodified.  |
+| `windows/`  | A **new, from-scratch Windows port** (Tauri 2 + Rust). My addition.        |
 
-It is also possible to develop your own visualizer on top of KeyCastr -- pull requests are welcome!
+The macOS sources under `keycastr/` are left exactly as they came from upstream
+(forked at tag **v0.10.5**). All of my work lives under `windows/`.
 
-![display preferences](assets/mouse-click-visualizer.gif)
+## The Windows port
 
-## Installation
+KeyCastr is macOS-only — it relies on Cocoa, `CGEventTap`, and AppKit, none of
+which exist on Windows. So `windows/` is **not a line-by-line port**: it is a
+reimplementation that reproduces KeyCastr's behavior and preferences on a
+Windows-native stack (Win32 low-level hooks + `ToUnicodeEx` for capture, a
+Tauri/WebView2 overlay for display).
 
-Download the latest release from [GitHub](https://github.com/keycastr/keycastr/releases)
+See **[`windows/README.md`](windows/README.md)** for the architecture, build
+instructions, the KeyCastr→Windows concept map, and the known divergences.
 
-Or, install using [homebrew](http://brew.sh/)
+Quick build (needs the Rust MSVC toolchain and Node for the Tauri CLI):
 
 ```console
-brew install --cask keycastr
+cd windows
+npm install
+npm run build      # produces the NSIS installer under src-tauri/target/release/bundle/nsis/
 ```
 
-## Granting Permissions
+## Personal use only
 
-KeyCastr requires your permission to receive events from macOS in order to broadcast your keystrokes and mouse clicks.
+I made this for myself and I'm sharing the source in the open in case it's
+useful to read. It comes with **no warranty and no support**, the same "AS IS"
+terms as the upstream BSD license below. Use it at your own risk.
 
-On newer versions of macOS (10.15+) there is an Input Monitoring menu under Security & Privacy within the System Preferences app, and KeyCastr will appear there automatically the first time you run it. Simply unlock this menu and check the box next to KeyCastr to enable it.
+Like the original, this is a keystroke visualizer: it installs global low-level
+keyboard/mouse hooks and therefore sees all system input by design. Captured
+input is only drawn to a local overlay and then discarded — the Windows port
+makes **no network calls** and writes nothing but its own preferences and a
+debug log. See `windows/README.md` § "Privacy & security" for details.
 
-![input_monitoring](assets/input_monitoring.png)
+## Credits
 
-On older versions of macOS, or if for some reason the app doesn't appear under the Input Monitoring menu (or if you want to pre-enable it) then you may manually add it to the list of apps in the Accessibility menu.
+All credit for KeyCastr goes to the original authors. From the upstream README:
 
-![accessibility](assets/accessibility.png)
+- [sdeken](https://github.com/sdeken) (Stephen Deken) — wrote the original version.
+- [akitchen](https://github.com/akitchen) — occasional development and maintenance.
+- [elia](https://github.com/elia) — created the `keycastr` organization and forked into it.
+- [lqez](https://github.com/lqez) — added a new menu bar icon.
+- [QuintB](https://github.com/QuintB) — designed an updated application icon.
 
-To add KeyCastr to the list click the <kbd>&plus;</kbd> button and select KeyCastr from the file system, or drag it in using Finder.
-
-If KeyCastr is already in the list you can remove it with the <kbd>&minus;</kbd> button and add it again in order to be certain that the right copy of the application is specified.
-
-### Troubleshooting permissions
-
-There are two likely causes for the app seeming not to work:
-
-1. Not receiving keystroke events from macOS due to security settings
-1. The window being offscreen.
-
-Sometimes switching from the Default to the Svelte visualizer can help you
-figure out which problem it is.
-
-To troubleshoot, We recommend that you:
-
-- Quit the KeyCastr app
-- Remove KeyCastr from any of the Privacy areas in the Security & Privacy
-  preferences panel (typically the Accessibility or Input Monitoring areas)
-- Start the KeyCastr app
-- When you see the "Keystroke Receiving" dialog from macOS, click "Open System
-  Preferences" or open the Preferences app yourself
-- Under Input Monitoring, enable KeyCastr by unlocking your preferences and
-  clicking the box next to KeyCastr which should have been automatically added
-  to the list
-- When macOS prompts you, restart KeyCastr. Or you can do it manually.
-
-## Position on Screen
-
-The default position is on the bottom left of your display. To modify the position of displayed keystrokes, click and drag the text like so:
-
-![reposition](assets/reposition.gif)
-
-## Security Concerns
-
-Any application in the Accessibility or Input Monitoring sections of the Security & Privacy pane in macOS's Preferences.app is capable of receiving all your input events. We encourage you to inspect these lists carefully, remove applications which you don't believe need to monitor your input, and ask tough questions of the companies which produce the software you use.
-
-KeyCastr is completely free and open source, and does not employ any networking mechanisms other than that included with the ubiquitous [Sparkle framework](https://sparkle-project.org/) for managing application updates. KeyCastr will never receive or display your passwords, so long as the website or application you are using treats password entry as secure, e.g. `<input type="password">` or equivalent.
-
-
-## History and Credits
-
- - [sdeken](https://github.com/sdeken) wrote the original version.
- - [akitchen](https://github.com/akitchen) occasional development and maintenance.
- - [elia](https://github.com/elia) created `keycastr` organization and forked into it.
- - [lqez](https://github.com/lqez) added a new menu bar icon.
- - [QuintB](https://github.com/QuintB) designed an updated application icon to match the icon style in modern versions of macOS.
+Original project: **https://github.com/keycastr/keycastr**
 
 ## License
 
-[BSD 3-Clause](https://opensource.org/licenses/BSD-3-Clause)
+KeyCastr is licensed under the [BSD 3-Clause License](https://opensource.org/licenses/BSD-3-Clause),
+Copyright (c) 2009 Stephen Deken (see [`LICENSE.md`](LICENSE.md)). The Windows
+port in `windows/` is released under the same license, and the original
+copyright notice is retained as required.
 
-KeyCastr has been freely available for the Mac since 2009.
+Per the license, the KeyCastr name is **not** used here to endorse or promote
+this fork — "KeyCastr for Windows" is only a description of what it ports.

@@ -1,0 +1,8 @@
+# Node (Tauri CLI)
+node_modules/
+
+# Rust / Cargo build output
+/src-tauri/target/
+
+# Tauri-generated capability schemas
+/src-tauri/gen/schemas/

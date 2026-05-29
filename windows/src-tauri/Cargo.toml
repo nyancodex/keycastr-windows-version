@@ -1,0 +1,31 @@
+[package]
+name = "keycastr"
+version = "0.1.0"
+description = "KeyCastr — Windows keystroke visualizer"
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Win32 global hooks (WH_KEYBOARD_LL / WH_MOUSE_LL), keyboard-layout translation
+# (ToUnicodeEx), live modifier state (GetAsyncKeyState), and virtual-desktop
+# geometry (GetSystemMetrics). See src/hook.rs and src/translate.rs.
+[target.'cfg(windows)'.dependencies.windows]
+version = "0.58"
+features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_System_LibraryLoader",
+]
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true

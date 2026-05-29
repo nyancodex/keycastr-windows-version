@@ -1,0 +1,101 @@
+/*
+ * prefs.css — Preferences window styling. Plain system-themed form. The
+ * structure/behavior live in prefs.html / prefs.js; this is only presentation.
+ */
+
+:root {
+  color-scheme: light dark;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+}
+
+body {
+  margin: 0;
+  padding: 12px 16px 16px;
+}
+
+.prefs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.prefs-header h1 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.cast-btn {
+  padding: 6px 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  cursor: pointer;
+}
+.cast-btn.on {
+  background: #d23;
+  color: #fff;
+  border-color: #d23;
+}
+
+.group {
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  border-radius: 8px;
+  padding: 8px 12px 12px;
+  margin-bottom: 12px;
+}
+.group h2 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+  margin: 0 0 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 0;
+}
+.row > span:first-child {
+  flex: 0 0 auto;
+}
+.row select,
+.row input[type="number"],
+.row input[type="text"] {
+  flex: 1 1 auto;
+  max-width: 60%;
+  padding: 3px 6px;
+}
+.row.check {
+  justify-content: flex-start;
+}
+.row.check input {
+  margin-right: 8px;
+}
+
+.color-pair {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Rows tied to a single visualizer style are shown/hidden by prefs.js. */
+.row[data-only] {
+  display: none;
+}
+.row[data-only].visible {
+  display: flex;
+}
+
+.prefs-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+.prefs-footer button {
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
