@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Lets the overlay and preferences windows use the core event API so they can receive the backend-emitted events (kc-event, kc-casting, kc-settings). Tauri v2 is deny-by-default: custom #[tauri::command]s (get_settings, etc.) are NOT gated, but event.listen() is the core command core:event:allow-listen and is rejected without this grant — which would leave the overlay unable to receive any keystrokes. The frontend uses no other core/plugin commands, so only core:event is granted (no window/fs/shell/etc.).",
+  "windows": [
+    "overlay",
+    "prefs"
+  ],
+  "permissions": [
+    "core:event:default"
+  ]
+}

@@ -88,6 +88,17 @@ All sent to the overlay window via `app.emit_to("overlay", "kc-event", …)`:
 Plus `kc-casting` (bool, broadcast) and `kc-settings` (the full settings object,
 pushed to the overlay on change).
 
+> **Capabilities (don't delete `src-tauri/capabilities/default.json`).** Tauri 2
+> is deny-by-default: the frontend's `event.listen()` is the core command
+> `core:event:allow-listen` and is **rejected unless a capability grants it**.
+> Our own `#[tauri::command]`s (`get_settings`, `get_casting`, …) are *not* gated
+> and work regardless — so a missing capability is silent: the Preferences form
+> still loads, but the overlay never receives `kc-event`/`kc-settings`/`kc-casting`
+> and **no keystrokes ever render**. `capabilities/default.json` grants
+> `core:event:default` to the `overlay` and `prefs` windows; if you add another
+> window that listens for events, add its label there. The frontend uses no other
+> core/plugin commands, so nothing else is granted (keeps the IPC surface minimal).
+
 ## KeyCastr → Windows concept map
 
 | KeyCastr (macOS)                       | This port (Windows)                                  |
@@ -167,4 +178,5 @@ hook behavior; that is expected for this class of tool.
 | overlay appearance                          | `src/overlay.css`                                |
 | a preference (add a field)                  | `Settings` in `main.rs` **and** `src/prefs.html` + `src/prefs.js` |
 | webview CSP / security                      | `src-tauri/tauri.conf.json` (`app.security.csp`) |
+| which windows may use the event API (IPC)   | `src-tauri/capabilities/default.json`            |
 ```
