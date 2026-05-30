@@ -74,6 +74,7 @@
     $("fadeDuration").value = s.fadeDuration;
     $("keystrokeDelay").value = s.keystrokeDelay;
     $("mouseDisplay").value = s.mouseDisplay;
+    $("mouseText").checked = !!s.mouseText;
     $("startCastingAtLaunch").checked = !!s.startCastingAtLaunch;
 
     hotkey = s.toggleHotkey;
@@ -95,6 +96,7 @@
       fadeDuration: parseFloat($("fadeDuration").value) || 0,
       keystrokeDelay: parseFloat($("keystrokeDelay").value) || 0,
       mouseDisplay: $("mouseDisplay").value,
+      mouseText: $("mouseText").checked,
       position: $("position").value,
       startCastingAtLaunch: $("startCastingAtLaunch").checked,
       toggleHotkey: hotkey,

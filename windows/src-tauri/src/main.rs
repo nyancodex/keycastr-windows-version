@@ -167,6 +167,9 @@ impl Default for HotKey {
 ///   display_modified_characters  show the *typed* char (Shift/AltGr applied)
 ///   font_size/colors/fade_* /keystroke_delay  — bezel appearance & timing
 ///   mouse_display         "none" | "current" — mouse-click circle visualizer
+///   mouse_text            also show each click as a text label ("Left Click")
+///                         in the active keystroke visualizer; independent of
+///                         mouse_display (you can have circles, text, both, none)
 ///   position              overlay corner (our substitute for KeyCastr's drag)
 ///   start_casting_at_launch  begin capturing immediately on launch
 ///   toggle_hotkey         the casting on/off chord
@@ -184,6 +187,7 @@ struct Settings {
     fade_duration: f64,
     keystroke_delay: f64,
     mouse_display: String,
+    mouse_text: bool,
     position: String,
     start_casting_at_launch: bool,
     toggle_hotkey: HotKey,
@@ -203,6 +207,7 @@ impl Default for Settings {
             fade_duration: 0.2,
             keystroke_delay: 0.5,
             mouse_display: "none".into(),
+            mouse_text: false,
             position: "bottom-left".into(),
             start_casting_at_launch: true,
             toggle_hotkey: HotKey::default(),

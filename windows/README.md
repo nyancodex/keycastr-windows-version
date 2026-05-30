@@ -126,7 +126,13 @@ the defaults mirror KeyCastr's out-of-box behavior.
 - **Font size, bezel color, text color, position** (one of four corners).
 - **Timing**: fade delay, fade duration, and the keystroke "join window" (how
   long a run of plain characters keeps accumulating into one bezel row).
-- **Mouse clicks**: off, or show click circles.
+- **Mouse clicks** (`mouseDisplay`): off, or show click circles.
+- **Show clicks as text** (`mouseText`): also label each click ("Left Click",
+  "Right Click", "Middle Click", "Side Click") in the active keystroke
+  visualizer. Independent of the click-circles setting — enable circles, text,
+  both, or neither. Fires on button-down only; rendered via `noteMouseText` in
+  `src/overlay.js` (bypasses the key display-mode gating, since a click isn't a
+  keystroke).
 - **Start casting at launch**, and the **toggle hotkey**.
 
 ## Divergences & limitations

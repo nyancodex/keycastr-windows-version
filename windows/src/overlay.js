@@ -180,21 +180,56 @@
 
   // --- Mouse visualizer (KCMouseEventVisualizer) ----------------------------
   //
-  // A circle at the click point that follows a drag and fades on release. Mouse
-  // x/y arrive in physical screen pixels; we map them into this window's CSS
-  // pixels by subtracting the overlay origin and dividing by devicePixelRatio.
-  // Uniform-DPI assumption (documented in README): one scale across all
-  // monitors, so mixed-DPI setups can be slightly off.
+  // Two independent outputs, each toggled in Preferences:
+  //   * click circles (settings.mouseDisplay === "current") — a circle at the
+  //     click point that follows a drag and fades on release. Mouse x/y arrive
+  //     in physical screen pixels; we map them into this window's CSS pixels by
+  //     subtracting the overlay origin and dividing by devicePixelRatio.
+  //     Uniform-DPI assumption (documented in README): one scale across all
+  //     monitors, so mixed-DPI setups can be slightly off.
+  //   * text labels (settings.mouseText) — each button-down also shows a label
+  //     ("Left Click", …) in the active keystroke visualizer, reusing its fade.
+  // They are independent: enable circles, text, both, or neither.
 
   var activeCircles = {}; // button -> element
+
+  // Button → human label for the text option.
+  var MOUSE_TEXT = {
+    left: "Left Click",
+    right: "Right Click",
+    middle: "Middle Click",
+    x: "Side Click",
+  };
 
   function toCss(x, y) {
     var dpr = window.devicePixelRatio || 1;
     return [(x - overlayOrigin[0]) / dpr, (y - overlayOrigin[1]) / dpr];
   }
 
+  // Show a click as a text label in whichever keystroke visualizer is active,
+  // bypassing the key display-mode gating (a click isn't a keystroke). In the
+  // Default bezel it gets its own row and ends any in-progress plain-key run.
+  function noteMouseText(button) {
+    var text = MOUSE_TEXT[button] || "Click";
+    if (settings.visualizer === "Svelte") {
+      svelteKeys.textContent = text;
+      bumpSvelteFade();
+    } else {
+      newLine(text);
+      curLine = null; // a click breaks the current accumulating plain-key row
+    }
+  }
+
   function noteMouse(ev) {
-    if (!settings || settings.mouseDisplay === "none") return;
+    if (!settings) return;
+    var showCircles = settings.mouseDisplay === "current";
+    var showText = !!settings.mouseText;
+    if (!showCircles && !showText) return;
+
+    // Text fires on button-down only (a "click"); move/up are circle-only.
+    if (showText && ev.phase === "down") noteMouseText(ev.button);
+    if (!showCircles) return;
+
     var p = toCss(ev.x, ev.y);
     if (ev.phase === "down") {
       activeCircles[ev.button] = makeCircle(p[0], p[1]);
