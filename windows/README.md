@@ -83,7 +83,7 @@ All sent to the overlay window via `app.emit_to("overlay", "kc-event", …)`:
 | -------- | ------------------------------------------------------------- |
 | `key`    | `{ vk, mods:{ctrl,alt,shift,win}, label:{special,plain,typed} }` |
 | `flags`  | `{ mods }` — emitted only when the modifier set changes       |
-| `mouse`  | `{ button, phase:"down"\|"up"\|"move", x, y }` (screen px)    |
+| `mouse`  | `{ button, phase:"down"\|"up"\|"move", x, y, mods }` (x/y screen px) |
 
 Plus `kc-casting` (bool, broadcast) and `kc-settings` (the full settings object,
 pushed to the overlay on change).
@@ -129,10 +129,12 @@ the defaults mirror KeyCastr's out-of-box behavior.
 - **Mouse clicks** (`mouseDisplay`): off, or show click circles.
 - **Show clicks as text** (`mouseText`): also label each click ("Left Click",
   "Right Click", "Middle Click", "Side Click") in the active keystroke
-  visualizer. Independent of the click-circles setting — enable circles, text,
-  both, or neither. Fires on button-down only; rendered via `noteMouseText` in
-  `src/overlay.js` (bypasses the key display-mode gating, since a click isn't a
-  keystroke).
+  visualizer. Modifiers held at click time are prefixed, so **key+mouse combos**
+  render as `Ctrl+Left Click` / `Ctrl+Shift+Right Click` (live modifier state
+  rides along on the `mouse` event's `mods`). Independent of the click-circles
+  setting — enable circles, text, both, or neither. Fires on button-down only;
+  rendered via `noteMouseText` in `src/overlay.js` (bypasses the key
+  display-mode gating, since a click isn't a keystroke).
 - **Start casting at launch**, and the **toggle hotkey**.
 
 ## Divergences & limitations

@@ -10,7 +10,7 @@
 // Event payload shapes (from run_worker):
 //   { kind: "key",   vk, mods:{ctrl,alt,shift,win}, label:{special,plain,typed} }
 //   { kind: "flags", mods:{...} }                  // a modifier set changed
-//   { kind: "mouse", button, phase:"down|up|move", x, y }  // x/y = screen px
+//   { kind: "mouse", button, phase:"down|up|move", x, y, mods }  // x/y screen px
 //
 // To change visualizer behavior, edit the noteX functions below; to change the
 // look, edit overlay.css; to change formatting, edit transformer.js.
@@ -188,7 +188,8 @@
   //     Uniform-DPI assumption (documented in README): one scale across all
   //     monitors, so mixed-DPI setups can be slightly off.
   //   * text labels (settings.mouseText) — each button-down also shows a label
-  //     ("Left Click", …) in the active keystroke visualizer, reusing its fade.
+  //     in the active keystroke visualizer, reusing its fade. Modifiers held at
+  //     click time are prefixed, so key+mouse combos read "Ctrl+Left Click".
   // They are independent: enable circles, text, both, or neither.
 
   var activeCircles = {}; // button -> element
@@ -209,8 +210,11 @@
   // Show a click as a text label in whichever keystroke visualizer is active,
   // bypassing the key display-mode gating (a click isn't a keystroke). In the
   // Default bezel it gets its own row and ends any in-progress plain-key run.
-  function noteMouseText(button) {
-    var text = MOUSE_TEXT[button] || "Click";
+  function noteMouseText(button, mods) {
+    // Prefix any modifiers held at click time (isSpecial=true so Shift is always
+    // shown, like a special key) → "Ctrl+Left Click", "Ctrl+Shift+Right Click".
+    var prefix = mods ? T.modifierPrefix(mods, false, true) : "";
+    var text = prefix + (MOUSE_TEXT[button] || "Click");
     if (settings.visualizer === "Svelte") {
       svelteKeys.textContent = text;
       bumpSvelteFade();
@@ -227,7 +231,7 @@
     if (!showCircles && !showText) return;
 
     // Text fires on button-down only (a "click"); move/up are circle-only.
-    if (showText && ev.phase === "down") noteMouseText(ev.button);
+    if (showText && ev.phase === "down") noteMouseText(ev.button, ev.mods);
     if (!showCircles) return;
 
     var p = toCss(ev.x, ev.y);

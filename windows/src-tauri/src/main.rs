@@ -420,10 +420,14 @@ fn run_worker(app: AppHandle, rx: Receiver<RawEvent>) {
                     continue;
                 }
                 let (button, phase) = mouse_descr(kind);
+                // Live modifier state so the overlay can render key+click combos
+                // ("Ctrl+Left Click") when click-as-text is enabled. Cheap, and
+                // the overlay only uses it on button-down.
+                let mods = translate::modifiers_now();
                 let _ = app.emit_to(
                     OVERLAY_LABEL,
                     KC_EVENT,
-                    json!({ "kind": "mouse", "button": button, "phase": phase, "x": x, "y": y }),
+                    json!({ "kind": "mouse", "button": button, "phase": phase, "x": x, "y": y, "mods": mods }),
                 );
             }
         }
