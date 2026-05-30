@@ -116,7 +116,10 @@ pushed to the overlay on change).
 ## Preferences
 
 Persisted as camelCase JSON (the Rust `Settings` struct) in the app config dir;
-the defaults mirror KeyCastr's out-of-box behavior.
+the defaults mirror KeyCastr's out-of-box behavior. The struct is
+`#[serde(default)]`, so a settings file from an older/newer build that is
+missing a field still loads (that field falls back to its default) — upgrades
+never silently wipe your preferences.
 
 - **Visualizer**: Default or Svelte.
 - **Display** (Default): command keys only / all modified keys / all keystrokes.

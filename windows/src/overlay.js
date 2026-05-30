@@ -78,7 +78,16 @@
   var curLine = null;
   var lastKeyTime = 0;
 
+  // A key with no special glyph and no printable character (e.g. browser/launch
+  // keys the layout maps to nothing) has nothing to show. Skip it so it can't
+  // render an empty bezel row or a lone "Ctrl+" prefix when modified.
+  function isEmptyKey(ev) {
+    var L = ev.label || {};
+    return !L.special && !L.plain && !L.typed;
+  }
+
   function defaultNoteKey(ev) {
+    if (isEmptyKey(ev)) return;
     if (!T.shouldDisplay(ev.mods, settings.displayMode)) return;
     var now = performance.now();
     var text = T.formatKeystroke(ev, settings);
@@ -146,6 +155,7 @@
   }
 
   function svelteNoteKey(ev) {
+    if (isEmptyKey(ev)) return;
     if (!settings.svelteDisplayAll && !T.isModified(ev.mods)) return;
     var text = T.formatKeystroke(ev, settings);
     // Keep a short tail of recent keys; long modified chords replace the line.

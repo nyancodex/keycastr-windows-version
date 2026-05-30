@@ -132,7 +132,10 @@ fn log_line(msg: &str) {
 /// without parsing an accelerator string). `label` is the human form shown in
 /// the UI. Default mirrors KeyCastr's Ctrl+Opt+Cmd+K, mapped to Windows keys.
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
+// `default` so a settings.json written by an older/newer build that is missing
+// a field still loads (the field falls back to its default) instead of failing
+// to parse — see the note on `Settings`.
+#[serde(rename_all = "camelCase", default)]
 struct HotKey {
     ctrl: bool,
     alt: bool,
@@ -173,8 +176,15 @@ impl Default for HotKey {
 ///   position              overlay corner (our substitute for KeyCastr's drag)
 ///   start_casting_at_launch  begin capturing immediately on launch
 ///   toggle_hotkey         the casting on/off chord
+///
+/// `#[serde(default)]` (container level) is load-bearing for upgrades: a
+/// settings.json written by a build that didn't have one of these fields (e.g.
+/// `mouse_text`, added in 0.1.2) must still deserialize — the missing field
+/// falls back to its default rather than failing the whole parse. Without it,
+/// `load_settings` would treat an old file as corrupt and silently reset ALL of
+/// the user's preferences to defaults.
 #[derive(Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 struct Settings {
     visualizer: String,
     display_mode: String,
@@ -348,6 +358,16 @@ fn matches_toggle(vk: u32, mods: translate::Modifiers) -> bool {
     false
 }
 
+/// True when `vk` is the toggle's bound key, ignoring modifiers. Used to rearm
+/// the edge-trigger when the key is released even if a modifier was let go first
+/// (so the chord no longer fully matches on the key-up).
+fn toggle_is_key(vk: u32) -> bool {
+    TOGGLE
+        .get()
+        .and_then(|cell| cell.lock().ok().map(|t| t.vk == vk))
+        .unwrap_or(false)
+}
+
 // --- Worker -------------------------------------------------------------------
 
 /// Map a raw mouse event to (button, phase) strings for the frontend.
@@ -374,6 +394,11 @@ fn mouse_descr(kind: MouseKind) -> (&'static str, &'static str) {
 /// emit a translated "key" event on key-down only; mouse events pass through.
 fn run_worker(app: AppHandle, rx: Receiver<RawEvent>) {
     let mut last_flags: Option<translate::Modifiers> = None;
+    // Edge-trigger state for the toggle chord. A held hotkey auto-repeats
+    // WM_KEYDOWN ~30x/s, so flipping on every down would thrash casting on/off
+    // and land in a random state. We flip only on the first down and rearm once
+    // the toggle key is released.
+    let mut toggle_armed = true;
     for ev in rx {
         // A casting on/off transition invalidates the dedupe cache so the next
         // modifier change is always re-emitted (see FLAGS_RESET).
@@ -384,11 +409,24 @@ fn run_worker(app: AppHandle, rx: Receiver<RawEvent>) {
             RawEvent::Key { vk, scan, down } => {
                 let mods = translate::modifiers_now();
 
-                // Toggle: on key-down of the bound (non-modifier) key with the
-                // right modifiers, flip casting and swallow — never display it.
-                if down && !translate::is_modifier_vk(vk) && matches_toggle(vk, mods) {
-                    flip_casting(&app);
+                // Toggle: flip on the rising edge of the bound (non-modifier)
+                // chord, then swallow it so it's never displayed. Auto-repeat
+                // downs are swallowed without flipping; the key-up rearms.
+                if !translate::is_modifier_vk(vk) && matches_toggle(vk, mods) {
+                    if down {
+                        if toggle_armed {
+                            toggle_armed = false;
+                            flip_casting(&app);
+                        }
+                    } else {
+                        toggle_armed = true;
+                    }
                     continue;
+                }
+                // Also rearm if the toggle key itself is released when the chord
+                // no longer fully matches (a modifier was let go before the key).
+                if !down && toggle_is_key(vk) {
+                    toggle_armed = true;
                 }
 
                 if !CASTING.load(Ordering::Relaxed) {
