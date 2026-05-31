@@ -182,6 +182,21 @@
     invoke("close_preferences");
   });
 
+  // Manual update check. The backend (run_check in main.rs) shows the result in
+  // a native dialog, so this just kicks it off; we briefly disable the button as
+  // feedback since the command returns immediately (the check runs async).
+  $("check-updates").addEventListener("click", function () {
+    var btn = $("check-updates");
+    var prev = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Checking…";
+    invoke("check_for_updates");
+    setTimeout(function () {
+      btn.disabled = false;
+      btn.textContent = prev;
+    }, 4000);
+  });
+
   listen("kc-casting", function (e) {
     reflectCasting(e.payload);
   });
@@ -189,4 +204,7 @@
   // Initial load.
   invoke("get_settings").then(fillForm);
   invoke("get_casting").then(reflectCasting);
+  invoke("get_version").then(function (v) {
+    $("appVersion").textContent = "v" + v;
+  });
 })();

@@ -57,6 +57,8 @@ use tauri::{
 };
 
 use hook::{MouseKind, RawEvent};
+use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
+use tauri_plugin_updater::UpdaterExt;
 
 // --- Constants ----------------------------------------------------------------
 
@@ -539,10 +541,112 @@ fn close_preferences(app: AppHandle) {
     }
 }
 
+// --- Auto-update --------------------------------------------------------------
+//
+// The Tauri updater (configured in tauri.conf.json `plugins.updater`) fetches a
+// signed `latest.json` from the GitHub "latest" release, compares versions, and
+// — if newer — downloads and runs the NSIS installer. We drive it entirely from
+// the backend (no JS updater bindings, so no extra capability), prompting via
+// `tauri-plugin-dialog`.
+//
+// `run_check` is launched once at startup with `interactive=false` (stay silent
+// when already current) and by the `check_for_updates` command with
+// `interactive=true` (also report "no updates" / errors). The network call goes
+// over the updater's own HTTP client — NOT the webview — so the webview CSP does
+// not apply. To change the manifest URL or install mode, edit `plugins.updater`
+// in tauri.conf.json.
+
+const CURRENT_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+async fn run_check(app: AppHandle, interactive: bool) {
+    let updater = match app.updater() {
+        Ok(u) => u,
+        Err(e) => {
+            log_line(&format!("updater init failed: {e}"));
+            return;
+        }
+    };
+
+    match updater.check().await {
+        Ok(Some(update)) => {
+            let new_version = update.version.clone();
+            log_line(&format!(
+                "update available: {CURRENT_VERSION} -> {new_version}"
+            ));
+            let approved = app
+                .dialog()
+                .message(format!(
+                    "KeyCastr {new_version} is available (you have {CURRENT_VERSION}).\n\nUpdate now? The app will close to install and then reopen."
+                ))
+                .title("KeyCastr update")
+                .buttons(MessageDialogButtons::OkCancelCustom(
+                    "Update".into(),
+                    "Later".into(),
+                ))
+                .blocking_show();
+            if !approved {
+                return;
+            }
+            match update.download_and_install(|_, _| {}, || {}).await {
+                Ok(_) => {
+                    // On Windows the installer terminates the app itself; the
+                    // restart is a best-effort relaunch where supported.
+                    log_line("update installed; restarting");
+                    app.restart();
+                }
+                Err(e) => {
+                    log_line(&format!("update install failed: {e}"));
+                    if interactive {
+                        let _ = app
+                            .dialog()
+                            .message(format!("The update couldn't be installed:\n{e}"))
+                            .title("KeyCastr update")
+                            .blocking_show();
+                    }
+                }
+            }
+        }
+        Ok(None) => {
+            if interactive {
+                let _ = app
+                    .dialog()
+                    .message(format!("You're on the latest version ({CURRENT_VERSION})."))
+                    .title("KeyCastr update")
+                    .blocking_show();
+            }
+        }
+        Err(e) => {
+            log_line(&format!("update check failed: {e}"));
+            if interactive {
+                let _ = app
+                    .dialog()
+                    .message(format!("Couldn't check for updates:\n{e}"))
+                    .title("KeyCastr update")
+                    .blocking_show();
+            }
+        }
+    }
+}
+
+/// The running app version, shown in Preferences.
+#[tauri::command]
+fn get_version() -> &'static str {
+    CURRENT_VERSION
+}
+
+/// Manual "Check for updates" (Preferences button). Spawns an interactive check
+/// so the user gets feedback even when already up to date.
+#[tauri::command]
+fn check_for_updates(app: AppHandle) {
+    tauri::async_runtime::spawn(run_check(app, true));
+}
+
 // --- Entry point --------------------------------------------------------------
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             get_settings,
             set_settings,
@@ -552,6 +656,8 @@ fn main() {
             get_overlay_origin,
             open_preferences,
             close_preferences,
+            get_version,
+            check_for_updates,
         ])
         .setup(|app| {
             init_logging(app.handle());
@@ -590,6 +696,12 @@ fn main() {
             if settings.start_casting_at_launch {
                 apply_casting(app.handle(), true);
             }
+
+            // Check GitHub for a newer signed release. Silent if already current;
+            // prompts only when an update is found (see `run_check`).
+            let update_app = app.handle().clone();
+            tauri::async_runtime::spawn(run_check(update_app, false));
+
             Ok(())
         })
         .build(tauri::generate_context!())

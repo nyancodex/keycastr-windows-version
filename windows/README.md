@@ -161,10 +161,16 @@ never silently wipe your preferences.
 ## Privacy & security
 
 Captured input is rendered to the local overlay and then discarded — it is
-never persisted or transmitted. The app makes **no network calls** (unlike
-macOS KeyCastr, this port has no Sparkle/auto-updater). The only files written
-are `settings.json` (preferences) and the debug log (startup banner + errors —
-*not* keystrokes), both in the app config/log dirs.
+never persisted or transmitted. The only files written are `settings.json`
+(preferences) and the debug log (startup banner + errors — *not* keystrokes),
+both in the app config/log dirs.
+
+The app makes exactly **one kind of network call**: the updater contacts GitHub
+on launch (and when you press *Check for updates*) to read the release manifest
+and, if you approve, download the installer. No telemetry, no analytics, no
+other hosts. That request is made by the updater's own HTTP client in the Rust
+backend — **not** the webview — so it is not subject to the CSP below. See
+*Auto-update*.
 
 The webview is locked down with a strict Content-Security-Policy in
 `tauri.conf.json` (`app.security.csp`): `script-src 'self'` (no inline/`eval`)
@@ -176,6 +182,36 @@ CSP at build time with the nonce its IPC bridge needs.
 Being a keystroke visualizer, the app installs global low-level keyboard/mouse
 hooks (see `hook.rs`) — it sees all system input by design. AV/EDR may flag this
 hook behavior; that is expected for this class of tool.
+
+## Auto-update
+
+The app uses the **Tauri v2 updater** (`tauri-plugin-updater`). On launch — and
+on demand from **Preferences ▸ Updates ▸ Check for updates** — it reads a signed
+`latest.json` manifest from the GitHub *latest* release, compares versions, and
+if a newer one exists **prompts** the user (`tauri-plugin-dialog`) before
+downloading and running the new NSIS installer, then relaunches. The whole flow
+lives in `run_check` in `src-tauri/src/main.rs`; the manifest URL and Windows
+install mode are in `tauri.conf.json` `plugins.updater`. It is driven entirely
+from the backend (the frontend only calls the custom `check_for_updates` /
+`get_version` commands), so it needs **no** added capability.
+
+**Signing.** Updates are verified with a minisign keypair. The **public** key is
+committed in `tauri.conf.json` `plugins.updater.pubkey`; the **private** key must
+never be committed — it lives only as the repo secrets `TAURI_SIGNING_PRIVATE_KEY`
+and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (consumed by CI) plus an offline backup.
+`bundle.createUpdaterArtifacts: true` makes the build emit the `.sig` next to the
+installer. Losing the private key means installed copies can no longer accept
+updates.
+
+**Releasing.** `/.github/workflows/release.yml` runs on a `v*` tag push: it
+builds + signs on Windows via `tauri-apps/tauri-action`, creates the GitHub
+release, and uploads the installer, its `.sig`, and `latest.json`
+(`includeUpdaterJson: true`). So cutting a release is: bump the version in the
+three manifests, commit, `git tag vX.Y.Z`, `git push origin vX.Y.Z`.
+
+**Bootstrap caveat.** Auto-update only works for builds that already contain the
+updater (0.2.0+). Anyone on an older build installs the next version manually
+once; updates flow automatically afterward.
 
 ## Where to change things
 
@@ -190,4 +226,7 @@ hook behavior; that is expected for this class of tool.
 | a preference (add a field)                  | `Settings` in `main.rs` **and** `src/prefs.html` + `src/prefs.js` |
 | webview CSP / security                      | `src-tauri/tauri.conf.json` (`app.security.csp`) |
 | which windows may use the event API (IPC)   | `src-tauri/capabilities/default.json`            |
+| update flow / prompt                        | `run_check` in `src-tauri/src/main.rs`           |
+| updater manifest URL / install mode / pubkey| `src-tauri/tauri.conf.json` (`plugins.updater`)  |
+| release build + signing automation          | `.github/workflows/release.yml`                  |
 ```

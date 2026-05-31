@@ -1,6 +1,6 @@
 [package]
 name = "keycastr"
-version = "0.1.4"
+version = "0.2.0"
 description = "KeyCastr — Windows keystroke visualizer"
 edition = "2021"
 rust-version = "1.77"
@@ -12,6 +12,14 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = ["tray-icon", "image-png"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+# Auto-update: checks the GitHub `latest.json` manifest, verifies the signed
+# update, downloads + runs the NSIS installer. `tauri-plugin-dialog` drives the
+# "update now?" prompt from the backend. See `updates` in src/main.rs and
+# `plugins.updater` in tauri.conf.json. Updater is desktop-only.
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
+tauri-plugin-dialog = "2"
 
 # Win32 global hooks (WH_KEYBOARD_LL / WH_MOUSE_LL), keyboard-layout translation
 # (ToUnicodeEx), live modifier state (GetAsyncKeyState), and virtual-desktop

@@ -1,0 +1,66 @@
+# Build, sign, and publish a KeyCastr-Windows release when a version tag is pushed.
+#
+# Flow: bump the version (windows/src-tauri/tauri.conf.json + package.json +
+# Cargo.toml), commit, then `git tag vX.Y.Z && git push origin vX.Y.Z`. This
+# workflow then builds the NSIS installer on Windows, signs the updater artifact
+# with the key in the repo secrets, creates the GitHub release, and uploads the
+# installer, its `.sig`, and the `latest.json` manifest the app's updater reads
+# (see windows/src-tauri/tauri.conf.json `plugins.updater`).
+#
+# Required repo secrets (Settings ▸ Secrets ▸ Actions):
+#   TAURI_SIGNING_PRIVATE_KEY           contents of the minisign private key
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  its password ("" if none)
+# The matching public key lives in tauri.conf.json `plugins.updater.pubkey`.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # create the release and upload assets
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: windows/src-tauri
+
+      - name: Install frontend tooling (@tauri-apps/cli)
+        working-directory: windows
+        run: npm ci
+
+      - name: Build, sign, and publish release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: windows
+          tagName: ${{ github.ref_name }}
+          releaseName: "KeyCastr for Windows __VERSION__"
+          releaseBody: |
+            Unofficial personal Windows port of KeyCastr.
+
+            Install `KeyCastr_<version>_x64-setup.exe` below. Builds 0.2.0+ check
+            for updates automatically on launch (and via Preferences ▸ Updates).
+
+            Unsigned build — if SmartScreen warns, choose **More info ▸ Run anyway**.
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true

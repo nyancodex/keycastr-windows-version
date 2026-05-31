@@ -82,6 +82,10 @@ body {
   gap: 8px;
 }
 
+.muted {
+  opacity: 0.7;
+}
+
 /* Rows tied to a single visualizer style are shown/hidden by prefs.js. */
 .row[data-only] {
   display: none;

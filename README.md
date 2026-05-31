@@ -37,9 +37,15 @@
 
 > Heads-up: like the macOS original, this is a keystroke visualizer — it
 > installs a global keyboard/mouse hook, so antivirus/SmartScreen may flag it.
-> It makes **no network calls** and stores only its settings and a local debug
-> log — never your keystrokes. Details in
+> Its only network use is the **update check** (it asks GitHub for new releases
+> on launch, and downloads one only if you approve) — no telemetry. It stores
+> only its settings and a local debug log — never your keystrokes. Details in
 > [`windows/README.md`](windows/README.md) § "Privacy & security".
+
+**Updates are automatic from 0.2.0 on.** The app checks GitHub on launch and
+prompts to install a newer signed release; you can also trigger a check from
+**Preferences ▸ Updates**. (Upgrading *to* 0.2.0 from an older build is a
+one-time manual install.)
 
 Building from source instead? See [`windows/README.md`](windows/README.md).
 
@@ -80,9 +86,10 @@ terms as the upstream BSD license below. Use it at your own risk.
 
 Like the original, this is a keystroke visualizer: it installs global low-level
 keyboard/mouse hooks and therefore sees all system input by design. Captured
-input is only drawn to a local overlay and then discarded — the Windows port
-makes **no network calls** and writes nothing but its own preferences and a
-debug log. See `windows/README.md` § "Privacy & security" for details.
+input is only drawn to a local overlay and then discarded — it is never stored
+or transmitted. The port's only network use is the GitHub **update check** (no
+telemetry), and it writes nothing but its own preferences and a debug log. See
+`windows/README.md` § "Privacy & security" for details.
 
 ## Credits
 
