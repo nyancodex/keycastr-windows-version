@@ -1,7 +1,7 @@
 {
   "name": "keycastr-windows",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "KeyCastr — Windows keystroke visualizer (Tauri port)",
   "scripts": {
     "tauri": "tauri",

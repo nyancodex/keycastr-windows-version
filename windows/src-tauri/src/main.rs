@@ -564,7 +564,28 @@ fn close_preferences(app: AppHandle) {
 
 const CURRENT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+// Serializes update checks so the launch check and the Preferences "Check for
+// updates" button can't run at once (double prompt / double download). Reset
+// when a check finishes; on a successful Windows install the process exits
+// before the reset runs, which is fine (we're quitting anyway).
+static UPDATE_IN_FLIGHT: AtomicBool = AtomicBool::new(false);
+
 async fn run_check(app: AppHandle, interactive: bool) {
+    if UPDATE_IN_FLIGHT.swap(true, Ordering::SeqCst) {
+        if interactive {
+            let _ = app
+                .dialog()
+                .message("An update check is already in progress.")
+                .title("KeyCastr update")
+                .blocking_show();
+        }
+        return;
+    }
+    run_check_inner(&app, interactive).await;
+    UPDATE_IN_FLIGHT.store(false, Ordering::SeqCst);
+}
+
+async fn run_check_inner(app: &AppHandle, interactive: bool) {
     let updater = match app.updater() {
         Ok(u) => u,
         Err(e) => {

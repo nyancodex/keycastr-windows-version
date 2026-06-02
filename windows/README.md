@@ -196,8 +196,10 @@ on demand from **Preferences ▸ Updates ▸ Check for updates** — it reads a 
 `latest.json` manifest from the GitHub *latest* release, compares versions, and
 if a newer one exists **prompts** the user (`tauri-plugin-dialog`) before
 downloading and running the new NSIS installer, then relaunches. The whole flow
-lives in `run_check` in `src-tauri/src/main.rs`; the manifest URL and Windows
-install mode are in `tauri.conf.json` `plugins.updater`. It is driven entirely
+lives in `run_check` in `src-tauri/src/main.rs` (an `UPDATE_IN_FLIGHT` guard
+serializes it, so the launch check and the Preferences button can't run at
+once); the manifest URL and Windows install mode are in `tauri.conf.json`
+`plugins.updater`. It is driven entirely
 from the backend (the frontend only calls the custom `check_for_updates` /
 `get_version` commands), so it needs **no** added capability.
 
