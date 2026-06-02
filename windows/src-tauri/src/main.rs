@@ -436,6 +436,12 @@ fn run_worker(app: AppHandle, rx: Receiver<RawEvent>) {
                 }
 
                 if translate::is_modifier_vk(vk) {
+                    // Use the event's own down/up for the modifier that changed:
+                    // GetAsyncKeyState can still report a just-released modifier
+                    // as down here (the LL hook fires before the system updates
+                    // async state), which otherwise leaves the Svelte slot stuck
+                    // "on" after release (issue #2).
+                    let mods = translate::modifiers_after(vk, down);
                     // Emit only when the modifier set actually changed, so a
                     // held modifier's key-repeat doesn't flood the channel.
                     if last_flags != Some(mods) {

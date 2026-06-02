@@ -98,6 +98,33 @@ pub fn modifiers_now() -> Modifiers {
     }
 }
 
+/// Like [`modifiers_now`], but authoritative for the modifier key in a specific
+/// event. `GetAsyncKeyState` can still report a modifier as *down* at the moment
+/// we process its key-up — the low-level hook fires before the system finalizes
+/// the async key state — which would leave a held-modifier indicator (the Svelte
+/// panel) stuck "on" after release (issue #2). So for the L/R modifier group that
+/// `vk` belongs to we trust the event's own `down` flag, OR'd with the opposite
+/// side's live state so holding *both* L and R still reads as down. A
+/// non-modifier `vk` is unaffected and returns `modifiers_now()`.
+pub fn modifiers_after(vk: u32, down: bool) -> Modifiers {
+    let mut m = modifiers_now();
+    match vk {
+        VK_LSHIFT => m.shift = down || key_down(VK_RSHIFT),
+        VK_RSHIFT => m.shift = down || key_down(VK_LSHIFT),
+        VK_SHIFT => m.shift = down,
+        VK_LCONTROL => m.ctrl = down || key_down(VK_RCONTROL),
+        VK_RCONTROL => m.ctrl = down || key_down(VK_LCONTROL),
+        VK_CONTROL => m.ctrl = down,
+        VK_LMENU => m.alt = down || key_down(VK_RMENU),
+        VK_RMENU => m.alt = down || key_down(VK_LMENU),
+        VK_MENU => m.alt = down,
+        VK_LWIN => m.win = down || key_down(VK_RWIN),
+        VK_RWIN => m.win = down || key_down(VK_LWIN),
+        _ => {}
+    }
+    m
+}
+
 /// True for keys that should surface as modifier-state changes ("flags" events
 /// that light up the Svelte panel) rather than as printable keystrokes.
 pub fn is_modifier_vk(vk: u32) -> bool {

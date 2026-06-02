@@ -157,6 +157,12 @@ never silently wipe your preferences.
 - **Hotkey vk capture.** The Preferences hotkey field stores the browser
   `keyCode`, which equals the Win32 virtual-key code for the keys that matter
   (letters/digits/F-keys); exotic keys may not round-trip a friendly label.
+- **Modifier release timing.** On a modifier key-up the low-level hook can fire
+  before Windows updates `GetAsyncKeyState`, so the just-released modifier may
+  still read as down. The worker therefore derives the changed modifier's state
+  from the event's own down/up via `translate::modifiers_after` (OR'd with the
+  opposite L/R key) instead of the async snapshot — otherwise the Svelte
+  modifier slots could stay lit after release.
 
 ## Privacy & security
 
